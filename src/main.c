@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "../include/mario_bros.h"
+#include "mario_bros.h"
 
 void set_fullscreen(SDL_Window* window, SDL_Renderer* renderer)
 {
@@ -102,7 +101,7 @@ int init_sdl(SDL_Window** window)
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return (-1);
 	}
-	*window = SDL_CreateWindow("Mario Bros", 0, 0, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+	*window = SDL_CreateWindow("Mario Bros", 50, 50, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
 	if(!window) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return (-1);
@@ -117,7 +116,7 @@ int check_env(char** env)
 	return (0);
 }
 
-int main(int argc, char** argv, char** envp)
+int main(int argc, char** argv)
 {
 	int ret = 0;
 	int** map = NULL;
@@ -129,7 +128,7 @@ int main(int argc, char** argv, char** envp)
 	SDL_Renderer* renderer = NULL;
 	SDL_Event event;
 
-	if (argc != 1 || argv[1] != NULL || check_env(envp) != 0)
+	if (argc != 1 || argv[1] != NULL)
 		return (-1);
 
 	map = load_map();

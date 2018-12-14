@@ -1,4 +1,6 @@
-#include "../include/mario_bros.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "mario_bros.h"
 
 int** malloc_map(char* str, long size)
 {

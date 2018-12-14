@@ -1,3 +1,6 @@
+#ifndef SMB
+#define SMB
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -23,3 +26,5 @@ struct key {
 int save_map(int** map);
 int edit_map(int** map, struct key key);
 int** load_map();
+
+#endif
