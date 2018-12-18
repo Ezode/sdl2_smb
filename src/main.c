@@ -97,6 +97,8 @@ int editor(t_game *game)
 		SDL_RenderPresent(game->renderer);
 	}
 	game->editing = 0;
+	SDL_DestroyTexture(background);
+	SDL_FreeSurface(surface);
 	return (ret);
 }
 
