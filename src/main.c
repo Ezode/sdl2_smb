@@ -74,15 +74,15 @@ int editor(t_game *game)
 	SDL_Surface *surface = NULL;
 	SDL_Texture* background = NULL;
 
-	if (load_map(game->map) != 0)
+	if (load_map(game) != 0)
 		return (-1);
 
 	surface = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32, 0, 0, 0, 0);
-	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 255, 0));
+	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 255));
 	background = SDL_CreateTextureFromSurface(game->renderer, surface);
 
 	while ((ret = handle_event(game->event, &game->key)) == 0) {
-		SDL_SetRenderDrawColor(game->renderer, 0, 0, 255, 255);
+		SDL_SetRenderDrawColor(game->renderer, 0, 0, 0, 255);
 		SDL_RenderClear(game->renderer);
 
 		edit_map(game);
@@ -143,20 +143,19 @@ int load_texture(t_game *game)
 int main(int argc, char** argv)
 {
 	int ret = 0;
-	struct s_game game = {NULL, NULL, NULL, {NULL}, {0, 0, {0}, {0}}, 0, 0};
+	struct s_game game = {NULL, NULL, NULL, {NULL}, {0, 0, {0}, {0}}, 0, 0, {0}};
 
+	if (argc != 1 || argv[1] != NULL)
+		return (-1);
 	if (init_sdl(&game) != 0)
 		return (-1);
 	game.renderer = SDL_CreateRenderer(game.window, -1, 0);
-
 	game.map = malloc_map();
 	if (game.map == NULL)
 		return (-1);
 	if (load_texture(&game) != 0)
 		return (-1);
-
 	ret = main_menu(&game);
-
 	SDL_DestroyWindow(game.window);
 	SDL_Quit();
 	return (ret);

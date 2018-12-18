@@ -43,9 +43,9 @@ typedef struct s_game
 } t_game;
 
 int** malloc_map(void);
-int load_map(int** map);
+int load_map(t_game* game);
 int save_map(int** map);
-int edit_map(t_game *game);
+int edit_map(t_game* game);
 void draw_tile(t_game game);
 void set_fullscreen(SDL_Window* window, SDL_Renderer* renderer);
 

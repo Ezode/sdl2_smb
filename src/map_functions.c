@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "mario_bros.h"
 
 int** malloc_map(void)
@@ -24,40 +25,47 @@ int** malloc_map(void)
 	return (map);
 }
 
-int load_map(int** map)
+char* get_str(void)
 {
-	int i = 0, j = 0, k = 0;
 	long size = 0;
 	char* str = NULL;
 	FILE* file = NULL;
 
 	file = fopen("./map.txt", "r");
 	if (file == NULL)
-		return (-1);
+		return (NULL);
 	fseek(file, 0, SEEK_END);
 	size = ftell(file);
 	fseek(file, 0, SEEK_SET);
 	str = malloc(sizeof(char) * (size + 1));
+	if (str == NULL)
+		return (NULL);
 	fread(str, size, 1, file);
 	str[size] = '\0';
+	fclose(file);
+	return (str);
+}
+
+int load_map(t_game* game)
+{
+	int size = 0;
+	char* str = NULL;
 	
-	while (i != N_HEIGHT_TILE) {
-		while (j != N_WIDTH_TILE) {
-			if (k == size) {
-				map[i][j] = 0;
-				j++;
-			}
-			else if (str[k] != '\n') {
-				map[i][j] = str[k] - 48;
+	if ((str = get_str()) == NULL)
+		return (-1);
+	size = strlen(str);
+
+	for (int i = 0, j = 0, k = 0; i != N_HEIGHT_TILE; i++) {
+		for (j = 0; j != N_WIDTH_TILE; j++) {
+			if (k == size)
+				game->map[i][j] = 0;
+			else {
+				game->map[i][j] = str[k] - 48;
 				k++;
-				j++;
 			}
-			else
-				k++;
 		}
-		i++;
-		j = 0;
 	}
+	free(str);
 	return (0);
 }
 
@@ -85,7 +93,6 @@ int save_map(int** map)
 	file = fopen("./map.txt", "w");
 	if (file == NULL)
 		return (-1);
-
 	while (i != N_HEIGHT_TILE) {
 		while (j != N_WIDTH_TILE) {
 			str[0] = map[i][j] + 48;
@@ -95,5 +102,6 @@ int save_map(int** map)
 		j = 0;
 		i++;
 	}
+	fclose(file);
 	return (0);
 }
