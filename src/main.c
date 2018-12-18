@@ -2,21 +2,25 @@
 #include <stdlib.h>
 #include "mario_bros.h"
 
-void set_fullscreen(SDL_Window* window, SDL_Renderer* renderer)
+int check_cmd(t_game *game)
 {
-	int flags = SDL_GetWindowFlags(window);
-	int IsFullscreen = (flags & SDL_WINDOW_FULLSCREEN) ? 1 : 0;
+	int ret = 0;
 
-	if (IsFullscreen == 0) {
-		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT);
+	if (game->key.keycode[SDL_SCANCODE_LALT] == 1 && game->key.keycode[SDL_SCANCODE_RETURN] == 1) {
+		set_fullscreen(game->window, game->renderer);
+		game->key.keycode[SDL_SCANCODE_RETURN] = 2;
 	}
-	else {
-		SDL_SetWindowFullscreen(window, 0);
+	else if (game->editing == 1 && game->key.keycode[SDL_SCANCODE_LCTRL] == 1 && game->key.keycode[SDL_SCANCODE_S] == 1) {
+		ret = save_map(game->map);
+		game->key.keycode[SDL_SCANCODE_S] = 2;
 	}
+	else if (game->key.keycode[SDL_SCANCODE_ESCAPE] == 1) {
+		ret = -1;
+	}
+	return (ret);
 }
 
-int handle_event(SDL_Event event, struct key* key)
+int handle_event(SDL_Event event, struct s_key* key)
 {
 	if (SDL_WaitEvent(&event)) {
 		switch (event.type)
@@ -32,14 +36,16 @@ int handle_event(SDL_Event event, struct key* key)
 			key->y = event.motion.y;
 			break;
 		case SDL_KEYDOWN:
-			if (key->keycode[event.key.keysym.scancode] == 0)
+			if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+				return (1);
+			else if (key->keycode[event.key.keysym.scancode] == 0)
 				key->keycode[event.key.keysym.scancode] = 1;
 			break;
 		case SDL_KEYUP:
 			key->keycode[event.key.keysym.scancode] = 0;
 			break;
 		case SDL_QUIT:
-			return(1);
+			return (2);
 			break;
 		default:
 			break;
@@ -48,129 +54,110 @@ int handle_event(SDL_Event event, struct key* key)
 	return (0);
 }
 
-void draw_tile(SDL_Renderer* renderer, struct sprite text, int** map)
-{
-	SDL_Rect pos; pos.x = 0, pos.y = 0, pos.w = TILE_SIZE, pos.h = TILE_SIZE;
-	int i = 0, j = 0;
-
-	while (i != N_HEIGHT_TILE) {
-		while (j != N_WIDTH_TILE) {
-			if (map[i][j] == 1)
-				SDL_RenderCopy(renderer, text.ground, NULL ,&pos);
-			pos.x += TILE_SIZE;
-			j++;
-		}
-		pos.x = 0;
-		j = 0;
-		pos.y += TILE_SIZE;
-		i++;
-	}
-}
-
-int check_cmd(SDL_Window* window, SDL_Renderer* renderer, struct key* key, int** map)
-{
-	int ret = 0;
-
-	if (key->keycode[SDL_SCANCODE_LALT] == 1 && key->keycode[SDL_SCANCODE_RETURN] == 1) {
-		set_fullscreen(window, renderer);
-		key->keycode[SDL_SCANCODE_RETURN] = 2;
-	}
-	else if (key->keycode[SDL_SCANCODE_LCTRL] == 1 && key->keycode[SDL_SCANCODE_S] == 1) {
-		ret = save_map(map);
-		key->keycode[SDL_SCANCODE_S] = 2;
-	}
-	else if (key->keycode[SDL_SCANCODE_ESCAPE] == 1) {
-		ret = -1;
-	}
-	
-	return (ret);
-}
-
-int load_texture(SDL_Renderer* renderer, struct sprite* text)
-{
-	SDL_Surface* surface = NULL;
-
-	surface = IMG_Load("img/ground.png");
-	text->ground = SDL_CreateTextureFromSurface(renderer, surface);
-	return (0);
-}
-
-int init_sdl(SDL_Window** window)
+int init_sdl(t_game *game)
 {
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return (-1);
 	}
-	*window = SDL_CreateWindow("Mario Bros", 50, 50, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
-	if(!window) {
+	game->window = SDL_CreateWindow("Mario Bros", 50, 50, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+	if(!game->window) {
 		fprintf(stderr, "%s\n", SDL_GetError());
 		return (-1);
 	}
 	return (0);
 }
 
-int check_env(char** env)
+int editor(t_game *game)
 {
-	if (env[0] == NULL)
+	int ret = 0;
+	SDL_Surface *surface = NULL;
+	SDL_Texture* background = NULL;
+
+	if (load_map(game->map) != 0)
 		return (-1);
+
+	surface = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32, 0, 0, 0, 0);
+	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 255, 0));
+	background = SDL_CreateTextureFromSurface(game->renderer, surface);
+
+	while ((ret = handle_event(game->event, &game->key)) == 0) {
+		SDL_SetRenderDrawColor(game->renderer, 0, 0, 255, 255);
+		SDL_RenderClear(game->renderer);
+
+		edit_map(game);
+
+		if (check_cmd(game) < 0)
+			return (-1);
+
+		SDL_RenderCopy(game->renderer, background, NULL, NULL);
+
+		draw_tile(*game);
+
+		SDL_RenderPresent(game->renderer);
+	}
+	game->editing = 0;
+	return (ret);
+}
+
+int game_loop(t_game *game)
+{
+	while (1) {
+
+	}
+	return (0);
+}
+
+int main_menu(t_game* game)
+{
+	int ret = 0;
+
+	while (handle_event(game->event, &game->key) == 0) {
+		if (game->key.keycode[SDL_SCANCODE_1] == 1) {
+			game->editing = 1;
+			ret = editor(game);
+		}
+		else if (game->key.keycode[SDL_SCANCODE_2] == 1) {
+			game->playing = 1;
+			ret = game_loop(game);
+		}
+		if (ret == 2)
+			break;
+		check_cmd(game);
+		SDL_SetRenderDrawColor(game->renderer, 255, 0, 0, 255);
+		SDL_RenderClear(game->renderer);
+		SDL_RenderPresent(game->renderer);
+	}
+	return (ret);
+}
+
+int load_texture(t_game *game)
+{
+	SDL_Surface* surface = NULL;
+
+	surface = IMG_Load("img/ground.png");
+	game->sprite.ground = SDL_CreateTextureFromSurface(game->renderer, surface);
 	return (0);
 }
 
 int main(int argc, char** argv)
 {
 	int ret = 0;
-	int** map = NULL;
-	int actualTime = 0, prevTime = 0;
-	struct sprite text = {NULL};
-	struct key key = {0, 0, {0}, {0}};
+	struct s_game game = {NULL, NULL, NULL, {NULL}, {0, 0, {0}, {0}}, 0, 0};
 
-	SDL_Window* window = NULL;
-	SDL_Renderer* renderer = NULL;
-	SDL_Event event;
+	if (init_sdl(&game) != 0)
+		return (-1);
+	game.renderer = SDL_CreateRenderer(game.window, -1, 0);
 
-	if (argc != 1 || argv[1] != NULL)
+	game.map = malloc_map();
+	if (game.map == NULL)
+		return (-1);
+	if (load_texture(&game) != 0)
 		return (-1);
 
-	map = load_map();
-	if (map == NULL) {
-		fprintf(stderr, "Error loading map file\n");
-		return (-1);
-	}
+	ret = main_menu(&game);
 
-	if (init_sdl(&window) != 0)
-		return (-1);
-	renderer = SDL_CreateRenderer(window, -1, 0);
-	load_texture(renderer, &text);
-
-	SDL_Surface *s;
-	s = SDL_CreateRGBSurface(0, WIDTH, HEIGHT, 32, 0, 0, 0, 0);
-	SDL_FillRect(s, NULL, SDL_MapRGB(s->format, 0, 255, 0));
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s);
-
-	while ((ret = handle_event(event, &key)) != 1) {
-		actualTime = SDL_GetTicks();
-		if (actualTime - prevTime >= FPS) {
-			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-			SDL_RenderClear(renderer);
-
-			edit_map(map, key);
-
-			if (check_cmd(window, renderer, &key, map) < 0)
-				return (-1);
-
-			SDL_RenderCopy(renderer, texture, NULL, NULL);
-
-			draw_tile(renderer, text, map);
-
-			SDL_RenderPresent(renderer);
-			prevTime = actualTime;
-		}
-		else {
-			SDL_Delay(FPS - (actualTime - prevTime));
-		}
-	}
-
-	SDL_DestroyWindow(window);
+	SDL_DestroyWindow(game.window);
 	SDL_Quit();
-	return (0);
+	return (ret);
 }

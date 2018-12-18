@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include "mario_bros.h"
 
-int** malloc_map(char* str, long size)
+int** malloc_map(void)
 {
-	int i = 0, j = 0, k = 0;
+	int i = 0, j = 0;
 	int **map = NULL;
 
 	map = malloc(sizeof(int*) * N_HEIGHT_TILE);
@@ -14,6 +14,34 @@ int** malloc_map(char* str, long size)
 		map[i] = malloc(sizeof(int) * N_WIDTH_TILE);
 		if (map[i] == NULL)
 			return (NULL);
+		while (j != N_WIDTH_TILE) {
+			map[i][j] = 0;
+			j++;
+		}
+		i++;
+		j = 0;
+	}
+	return (map);
+}
+
+int load_map(int** map)
+{
+	int i = 0, j = 0, k = 0;
+	long size = 0;
+	char* str = NULL;
+	FILE* file = NULL;
+
+	file = fopen("./map.txt", "r");
+	if (file == NULL)
+		return (-1);
+	fseek(file, 0, SEEK_END);
+	size = ftell(file);
+	fseek(file, 0, SEEK_SET);
+	str = malloc(sizeof(char) * (size + 1));
+	fread(str, size, 1, file);
+	str[size] = '\0';
+	
+	while (i != N_HEIGHT_TILE) {
 		while (j != N_WIDTH_TILE) {
 			if (k == size) {
 				map[i][j] = 0;
@@ -27,42 +55,22 @@ int** malloc_map(char* str, long size)
 			else
 				k++;
 		}
-		j = 0;
 		i++;
+		j = 0;
 	}
-	return (map);
+	return (0);
 }
 
-int** load_map()
+int edit_map(t_game *game)
 {
-	FILE* file = NULL;
-	long size = 0;
-	char* str = NULL;
-	int** map = NULL;
-
-	file = fopen("./map.txt", "r");
-	if (file == NULL)
-		return (NULL);
-	fseek(file, 0, SEEK_END);
-	size = ftell(file);
-	fseek(file, 0, SEEK_SET);
-	str = malloc(sizeof(char) * (size + 1));
-	fread(str, size, 1, file);
-	str[size] = '\0';
-	map = malloc_map(str, size);
-	return (map);
-}
-
-int edit_map(int** map, struct key key)
-{
-	if (key.mouse[SDL_BUTTON_RIGHT] == 1) {
-		if (key.x >= 0 && key.x <= WIDTH && key.y >= 0 && key.y <= HEIGHT) {
-			map[key.y / TILE_SIZE][key.x / TILE_SIZE] = 0;
+	if (game->key.mouse[SDL_BUTTON_RIGHT] == 1) {
+		if (game->key.x >= 0 && game->key.x <= WIDTH && game->key.y >= 0 && game->key.y <= HEIGHT) {
+			game->map[game->key.y / TILE_SIZE][game->key.x / TILE_SIZE] = 0;
 		}
 	}
-	else if (key.mouse[SDL_BUTTON_LEFT] == 1) {
-		if (key.x >= 0 && key.x <= WIDTH && key.y >= 0 && key.y <= HEIGHT) {
-			map[key.y / TILE_SIZE][key.x / TILE_SIZE] = 1;
+	else if (game->key.mouse[SDL_BUTTON_LEFT] == 1) {
+		if (game->key.x >= 0 && game->key.x <= WIDTH && game->key.y >= 0 && game->key.y <= HEIGHT) {
+			game->map[game->key.y / TILE_SIZE][game->key.x / TILE_SIZE] = 1;
 		}
 	}
 	return (0);

@@ -12,19 +12,41 @@
 #define FRAME_RATE 60
 #define FPS 1000 / FRAME_RATE
 
-struct sprite {
+typedef struct s_sprite
+{
 	SDL_Texture* ground;
-};
+} t_sprite;
 
-struct key {
+struct s_key
+{
 	int x;
 	int y;
 	int mouse[5];
 	int keycode[285];
-};
+} t_key;
 
+typedef struct s_game
+{
+	int** map;
+
+	SDL_Window* window;
+	SDL_Renderer* renderer;
+
+	struct s_sprite sprite;
+	struct s_key key;
+
+	int playing;
+	int editing;
+
+	SDL_Event event;
+
+} t_game;
+
+int** malloc_map(void);
+int load_map(int** map);
 int save_map(int** map);
-int edit_map(int** map, struct key key);
-int** load_map();
+int edit_map(t_game *game);
+void draw_tile(t_game game);
+void set_fullscreen(SDL_Window* window, SDL_Renderer* renderer);
 
 #endif

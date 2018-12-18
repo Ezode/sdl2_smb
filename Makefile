@@ -5,8 +5,9 @@
 ## Makefile for Mario Bros project
 ##
 
-SRC		=	src/main.c			\
-			src/map_functions.c	\
+SRC		=	src/main.c					\
+			src/map_functions.c			\
+			src/render_functions.c		\
 
 OBJ		=	$(SRC:.c=.o)
 
