@@ -13,9 +13,7 @@ OBJ		=	$(SRC:.c=.o)
 
 NAME	=	smb
 
-CFLAGS 	= 	-I ./include -L lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -Wall -Wextra
-
-CC		= 	gcc
+CFLAGS 	= 	-I ./include -lSDL2 -lSDL2_image -Wall -Wextra
 
 all:	$(NAME)
 
@@ -26,7 +24,7 @@ clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(NAME).exe
+	rm -f $(NAME)
 
 re:	all clean
 
